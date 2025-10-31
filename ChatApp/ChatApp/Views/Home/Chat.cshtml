@@ -1,0 +1,72 @@
+﻿<div class="container">
+    <div class="row p-1">
+        <div class="col-5">User</div>
+        <div class="col-5">
+            <input type="text" id="userInput" />
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-5">Message</div>
+        <div class="col-5">
+            <input type="text" class="w-100" id="messageInput" />
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-6 text-end">
+            <input type="button" id="sendButton" value="Send Message" />
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-6">
+            <hr />
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-6">
+            <ul id="messagesList"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+    $(document).ready(function () {
+
+        // Create connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/ChatMessage") // 👈 use your actual hub route, e.g. /chatHub
+            .build();
+
+        // Receive message from server
+        connection.on("ReceiveMessage", function (user, message) {
+            const msg = $('<div>').text(`${user}: ${message}`);
+            $('#messagesList').append(msg);
+        });
+
+        // Start the connection
+        connection.start().then(function () {
+            console.log("Connected to SignalR hub.");
+
+            // Send message button click
+            $('#sendButton').click(function () {
+                const user = $('#userInput').val();
+                const message = $('#messageInput').val();
+
+                // Invoke SendMessage method on the server
+                connection.invoke("SendMessage", user, message).catch(function (err) {
+                    return console.error(err.toString());
+                });
+
+                $('#messageInput').val('');
+            });
+        }).catch(function (err) {
+            console.error(err.toString());
+        });
+
+    });
+</script>
+
